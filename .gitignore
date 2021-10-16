@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# C lang
+*.c
+
+# Build directory
+build/
