@@ -56,14 +56,50 @@ struct GameManager
   SDL_Window *window;
   SDL_Renderer *renderer;
   SDL_Texture *texture;
+  double texture_size_ratio;
   struct Camera camera;
   struct Room room;
   SDL_Texture *textures[MAX_TEXTURES_COUNT];
   int textures_count;
   int cell_size;
+  SDL_Rect screen_rectangle;
 };
 
 struct GameManager manager;
+
+bool
+excess_width (double window_size_ratio)
+{
+  if (window_size_ratio > manager.texture_size_ratio)
+    {
+      return true;
+    }
+  return false;
+}
+
+// ww / wh = w / h = tex_ratio => w = tex_ratio * h => h = w / tex_ratio 
+
+void
+calculate_screen_rectangle (int window_width, int window_height)
+{
+  double window_size_ratio = window_width / (double)window_height;
+  if (excess_width (window_size_ratio))
+    {
+      manager.screen_rectangle.y = 0;
+      manager.screen_rectangle.h = window_height;
+      manager.screen_rectangle.w = window_height * manager.texture_size_ratio;
+      int excess = window_width - manager.screen_rectangle.w;
+      manager.screen_rectangle.x = excess / 2;
+    }
+  else
+    {
+      manager.screen_rectangle.x = 0;
+      manager.screen_rectangle.w = window_width;
+      manager.screen_rectangle.h = window_width / manager.texture_size_ratio;
+      int excess = window_height - manager.screen_rectangle.h;
+      manager.screen_rectangle.y = excess / 2;
+    }
+}
 
 void
 draw_room (struct Room *room, struct Camera *camera, SDL_Renderer *renderer)
@@ -160,7 +196,7 @@ initialize()
       fprintf (stderr, "IMG_Init: %s\n", IMG_GetError ());
       return ERROR;
     }
-  manager.window = SDL_CreateWindow("Spacess", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 512, SDL_WINDOW_HIDDEN);
+  manager.window = SDL_CreateWindow("Spacess", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 512, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
   if (manager.window == NULL)
     {
       fprintf (stderr, "Could not create window: %s\n", SDL_GetError ());
@@ -178,6 +214,8 @@ initialize()
       fprintf (stderr, "Could not create texture: %s\n", SDL_GetError ());
       return ERROR;
     }
+  manager.texture_size_ratio = TEXTURE_WIDTH / (double)TEXTURE_HEIGHT;
+  calculate_screen_rectangle (1024, 512);
   if (initialize_room (&manager.room, 8, 8) == ERROR)
     {
       return ERROR;
@@ -208,7 +246,7 @@ start()
       SDL_SetRenderTarget (manager.renderer, NULL);
       SDL_SetRenderDrawColor(manager.renderer, 0, 0, 0, 255);
       SDL_RenderClear (manager.renderer);
-      SDL_RenderCopy (manager.renderer, manager.texture, NULL, NULL);
+      SDL_RenderCopy (manager.renderer, manager.texture, NULL, &manager.screen_rectangle);
       SDL_RenderPresent (manager.renderer);
 
       SDL_Event event;
@@ -219,10 +257,20 @@ start()
             case SDL_QUIT:
               manager.running = false;
               break;
+            case SDL_WINDOWEVENT:
+              //fprintf (stdout, "SDL_WINDOWEVENT\n");fflush (stdout);
+              switch (event.window.event)
+                {
+                  case SDL_WINDOWEVENT_SIZE_CHANGED:
+                    //fprintf (stdout, "SDL_WINDOWEVENT_SIZE_CHANGED (%i, %i)\n", event.window.data1, event.window.data2);fflush (stdout);
+                    calculate_screen_rectangle (event.window.data1, event.window.data2);
+                    break;
+                }
+              break;
             }
         }
-      manager.camera.position[0] += 0.25;
-      manager.camera.position[1] += 0.125;
+      //manager.camera.position[0] += 0.25;
+      //manager.camera.position[1] += 0.125;
       SDL_Delay (16);
     }
   return SUCCESS;
