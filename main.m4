@@ -27,9 +27,11 @@ example_function (int x, int y)
 #define SUCCESS 0
 #define ERROR 1
 
-#define TEXTURE_WIDTH 1024
-#define TEXTURE_HEIGHT 512
+#define TEXTURE_WIDTH 512
+#define TEXTURE_HEIGHT 256
 #define MAX_TEXTURES_COUNT 64
+
+#define TEXTURE_BACKGROUND 0
 
 struct Camera
 {
@@ -58,6 +60,7 @@ struct GameManager
   struct Room room;
   SDL_Texture *textures[MAX_TEXTURES_COUNT];
   int textures_count;
+  int cell_size;
 };
 
 struct GameManager manager;
@@ -65,7 +68,20 @@ struct GameManager manager;
 void
 draw_room (struct Room *room, struct Camera *camera, SDL_Renderer *renderer)
 {
-
+  for (int ry = 0; ry < room->size[1]; ry++)
+   {
+     int y = ry * manager.cell_size - camera->position[1];
+     for (int rx = 0; rx < room->size[0]; rx++)
+      {
+        int x = rx * manager.cell_size - camera->position[0];
+        SDL_Rect destination;
+        destination.x = x;
+        destination.y = y;
+        destination.w = manager.cell_size;
+        destination.h = manager.cell_size;
+        SDL_RenderCopy (renderer, manager.textures[TEXTURE_BACKGROUND], NULL, &destination);
+      }
+   }
 }
 
 int
@@ -75,7 +91,7 @@ load_texture (char *path)
   assert (manager.textures_count < MAX_TEXTURES_COUNT);
   SDL_Surface *surface;
   surface = IMG_Load (path);
-  if (surface = NULL) 
+  if (surface == NULL) 
     {
       fprintf (stderr, "IMG_Load: %s\n", IMG_GetError ());
       return ERROR;
@@ -130,12 +146,12 @@ initialize_camera (struct Camera *camera, double x, double y)
 int
 initialize()
 {
+  manager.cell_size = 32;
   if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0)
     {
       fprintf (stderr, "Unable to initialize SDL: %s", SDL_GetError ());
       return ERROR;
     }
-  
   int flags = IMG_INIT_PNG;
   int initted = IMG_Init (flags);
   if ((initted & flags) != flags)
@@ -166,7 +182,7 @@ initialize()
     {
       return ERROR;
     }
-  if (initialize_camera (&manager.camera, 0., 0.) == ERROR)
+  if (initialize_camera (&manager.camera, 0, 0) == ERROR)
     {
       return ERROR;
     }
@@ -205,6 +221,9 @@ start()
               break;
             }
         }
+      manager.camera.position[0] += 0.25;
+      manager.camera.position[1] += 0.125;
+      SDL_Delay (16);
     }
   return SUCCESS;
 }
