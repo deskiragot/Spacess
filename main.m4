@@ -17,6 +17,7 @@ example_function (int x, int y)
 }]])dnl
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -238,7 +239,7 @@ start()
   manager.running = true;
   while (manager.running)
     {
-      
+      int ticks_a = SDL_GetTicks();
       SDL_SetRenderTarget (manager.renderer, manager.texture);
       SDL_SetRenderDrawColor(manager.renderer, 64, 0, 64, 255);
       SDL_RenderClear (manager.renderer);
@@ -256,7 +257,7 @@ start()
             {
             case SDL_QUIT:
               manager.running = false;
-              break;
+              return SUCCESS;
             case SDL_WINDOWEVENT:
               //fprintf (stdout, "SDL_WINDOWEVENT\n");fflush (stdout);
               switch (event.window.event)
@@ -269,9 +270,14 @@ start()
               break;
             }
         }
-      //manager.camera.position[0] += 0.25;
-      //manager.camera.position[1] += 0.125;
-      SDL_Delay (16);
+      //manager.camera.position[0] += 0.25;manager.camera.position[1] += 0.125;
+      int ticks_b = SDL_GetTicks();
+      int ticks_elpased = ticks_b - ticks_a;
+      int ticks_to_delay = 16 - ticks_elpased;
+      if (ticks_to_delay > 0)
+        {
+          SDL_Delay (ticks_to_delay);
+        }
     }
   return SUCCESS;
 }
