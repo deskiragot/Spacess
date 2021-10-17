@@ -197,7 +197,7 @@ initialize()
       fprintf (stderr, "IMG_Init: %s\n", IMG_GetError ());
       return ERROR;
     }
-  manager.window = SDL_CreateWindow("Spacess", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 512, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+  manager.window = SDL_CreateWindow("Spacess", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 512, SDL_WINDOW_HIDDEN | SDL_WINDOW_FULLSCREEN_DESKTOP);
   if (manager.window == NULL)
     {
       fprintf (stderr, "Could not create window: %s\n", SDL_GetError ());

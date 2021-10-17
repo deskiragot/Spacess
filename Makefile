@@ -1,5 +1,13 @@
 CC=gcc `pkgconf sdl2_image sdl2 --cflags`
 LIBS=`pkgconf sdl2_image sdl2 --libs`
+run-lab: lab
+	./lab
+lab: lab.o
+	gcc lab.o -o lab
+lab.o: lab.c
+	gcc lab.c -c
+lab.c: lab.m4
+	m4 lab.m4 > lab.c
 run: spacess
 	./spacess
 spacess: main.o
@@ -9,6 +17,8 @@ main.o: main.c
 main.c: main.m4
 	m4 main.m4 > main.c
 clean:
-	rm spacess *c *o
+	rm *exe *c *o
 list-dependencies: spacess
 	ldd spacess
+list-dependencies-msys2: spacess
+	ldd spacess | grep -v "/c/"
