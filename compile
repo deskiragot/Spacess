@@ -1,0 +1,2 @@
+m4 main.m4 > main.c
+gcc `pkgconf sdl2_image sdl2 --cflags` main.c `pkgconf sdl2_image sdl2 --libs`
